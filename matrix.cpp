@@ -5,15 +5,6 @@
 
 #include "matrix.hpp"
 
-/** Function: printMatrix
- * Description: print matrix in the following format:
- * 1 | 2 | 3
- * 4 | 5 | 6
- * 7 | 8 | 9
- * Input: 2D vector representing a matrix (passed by constant reference)
- * Output: none
- */
-
 void printMatrix(const vector <vector <double>> &matrix) {
     // get dimensions
     int height = matrix.size();
@@ -31,9 +22,30 @@ void printMatrix(const vector <vector <double>> &matrix) {
 
         cout << endl;
     }
+
+    cout << endl;
 }
 
-/** Helper function: coFactor
+void fixNegativeZero(vector <vector <double>> &matrix) {
+    // get dimensions
+    int height = matrix.size();
+    int width = matrix[0].size();
+
+    // nested for loop to access every element of the matrix
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            if (matrix[i][j] == 0.0) {
+                matrix[i][j] = 0;
+            }
+        }
+    }
+}
+
+bool matrixIsSquare(const vector <vector <double>> &matrix) {
+    return matrix.size() == matrix[0].size();
+}
+
+/** Helper function: cofactor
  * Description: factor a larger matrix (size n) and copy into a submatrix (of size n-1) for calculation of the determinant
  * Input: 2D vector representing a matrix (passed by constant reference), 2D vector representing a submatrix (passed by constant reference), row and column of the coefficient (ints), size of larger matrix (int)
  * Change: copy factored values from the larger matrix into the submatrix
@@ -70,14 +82,6 @@ void cofactor(const vector <vector<double>> &matrix, vector <vector<double>> &su
     }*/    
 }
 
-/** Function: determinant
- * Description: calculate the determinant of a matrix
- * - Recursive function: in each recursion, a submatrix is factored out of the larger matrix, until the smallest submatrix is obtained (size 1), where the determinant is the sole element. Each cofactor is multiplied by a coefficient (positive or negative according to the column) and added to the determinant.
- * Input: 2D vector representing a matrix (passed by constant reference), size of the matrix (int)
- * TODO: it's not crucial, but would be efficient to search for the best row or column to start the factoring process. Ideally, the method would first find the row or column with the most 0's or 1's, instead of always starting factoring from the first row.
- * Output: the determinant (double)
- */
-
 double determinant(const vector <vector <double>> &matrix, int size) {
     double det = 0; // determinant value to be returned
 
@@ -103,4 +107,33 @@ double determinant(const vector <vector <double>> &matrix, int size) {
     }
 
     return det;
+}
+
+vector <vector<double>> rref(vector <vector <double>> matrix) {
+    int height = matrix.size();
+    int width = matrix[0].size();
+    int lead = 0;
+
+    while (lead < height) {
+        double divisor, multiplier;
+
+        for (int r = 0; r < height; r++) { // for each row ...
+            /* calculate divisor and multiplier */
+            divisor = matrix[lead][lead];
+            multiplier = matrix[r][lead] / matrix[lead][lead];
+
+            for (int c = 0; c < width; c++) { // for each column ...
+                if (r == lead)
+                    matrix[r][c] /= divisor;               // make pivot = 1
+                else
+                    matrix[r][c] -= matrix[lead][c] * multiplier;  // make other = 0
+            }
+        }
+
+        lead++;
+    }
+
+    fixNegativeZero(matrix);
+
+    return matrix;
 }

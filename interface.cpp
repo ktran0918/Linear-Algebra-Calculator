@@ -5,6 +5,43 @@
 
 #include "interface.hpp"
 
+bool cmdArgsParser(int argc, char** argv, string &option, string &arg1, string &arg2) {
+    if (argc == 2) {
+        option = argv[1];
+    }
+
+    else if (argc == 3) {
+        if (argv[1][0] == '-') {
+            option = argv[1];
+            arg1 = argv[2];
+        }
+        else if (argv[2][0] == '-') {
+            option = argv[2];
+            arg1 = argv[1];
+        }
+        else {
+            return false;
+        }
+    }
+
+    else if (argc == 4) {
+        if (argv[2][0] == '+' ||
+            argv[2][0] == '-' ||
+            argv[2][0] == '*') {
+                option = argv[2];
+                arg1 = argv[1];
+                arg2 = argv[3];
+        }
+        else {
+            return false;
+        }
+    }
+
+    else { return false; }
+
+    return true;
+}
+
 void displayInstructions() {
     // print usage instructions (also found in the program's documentation)
     cout << "\n\t\tWELCOME TO THE LINEAR ALGEBRA CALCULATOR!\n"
@@ -36,7 +73,7 @@ void displayInstructions() {
 }
 
 /** Helper function: cleanUpMatrixInput
- * Description: helper function to validateMatrixInput(); clean up input string for further validity check:
+ * Description: helper function to matrixInputIsValid(); clean up input string for further validity check:
  * - Remove dangling and duplicate periods (decimal points)
  * - Remove spaces at the beginning and end of input; remove multiple spaces in a row
  * - Remove commas at the beginning of input; remove multiple commas in a row
@@ -50,7 +87,7 @@ void cleanUpMatrixInput(string &matrixInput) {
     int i = 0;
 
     // remove dangling and duplicate periods
-    while (i < inputStrLen) {
+    /*while (i < inputStrLen) {
         // if a period is encountered with a successive period or comma, delete the current period
         if (matrixInput[i] == '.' && (matrixInput[i+1] == '.' || matrixInput[i+1] == ',') ) {
             // erase the period at iterator; i is kept in place to check the next character, which is shifted over after erase
@@ -65,7 +102,7 @@ void cleanUpMatrixInput(string &matrixInput) {
         }
         // if the period is next to a number, or the current character is something else entirely, do nothing and move on to the next character
         else { i++; }
-    }
+    }*/
 
     // if all dangling and duplicate periods have been deleted, but all the string has left is a single period, input is meaningless; delete the last period and do nothing more.
     if (inputStrLen == 1 && matrixInput[0] == '.') {
@@ -108,43 +145,60 @@ void cleanUpMatrixInput(string &matrixInput) {
     cout << "Input has been cleaned up to be: " << matrixInput << "\n\n";
 }
 
-/** Helper function: validateMatrixInput
- * Description: 
- * - helper function to getMatrixFromUser()
- * - validate matrix input (a string) from the user
- * - if string is not valid, return the appropriate error code:
- * 1 - string is empty
- * 2 - input contains invalid characters (those other than comma, period, space, and numbers)
- * 3 - input does not contain at least one numerical entry
- * - if string is valid, return 0; additionally, append a comma to the string is one is not available, so that the resultant string is compliant for parsing
- * Input: matrix input (string) (passed by reference)
- * Change: appends comma to the input string if found valid
- * Output: error code (int)
- */
-
-int validateMatrixInput(string &matrixInput) {
+bool matrixInputIsValid(string &matrixInput) {
     // check if the string is empty
-    if (matrixInput == "") return 1;
+    if (matrixInput == "") {
+        cout << "You didn't give a matrix! Please try again.\n\n";
+        return false;
+    };
 
-    // clean up the string for further checks
-    cleanUpMatrixInput(matrixInput);
+    int i;
 
     // calculate length of string to prevent redundant computation in further checks
     int inputStrLen = matrixInput.length();
 
+    // clean up the string for further checks
+    cleanUpMatrixInput(matrixInput);
+
+    /*for (i = 0; i < inputStrLen; i++) {
+        if (matrixInput[i] == '-') {
+            if ( isdigit(matrixInput[i-1]) ||
+                !isdigit(matrixInput[i+1]) ) {
+                    cout << "Input is invalid because it contains dangling negative signs! Please check again.\n\n";
+                    return false;
+            }
+        }
+    }
+
+    for (i = 0; i < inputStrLen; i++) {
+        if (matrixInput[i] == '.') {
+            if ( (isdigit(matrixInput[i-1]) && matrixInput[i+1] != ' ' && matrixInput[i+1] != ',') ||
+                (isdigit(matrixInput[i+1]) && matrixInput[i-1] != ' ' && matrixInput[i-1] != ',' && matrixInput[i-1] != '-') ) {
+                    cout << "Input is invalid because it contains dangling decimal points! Please check again.\n\n";
+                    return false;
+            }
+        }
+    }*/
+
+    // calculate length of string to prevent redundant computation in further checks
+    inputStrLen = matrixInput.length();
+
     // if after clean-up, the string is empty, then the string did not have a number to start with
-    if (inputStrLen == 0) { return 3; }
-    
-    int i;
+    if (inputStrLen == 0) {
+        cout << "Input matrix must have at least one numerical entry! Please try again.\n\n";
+        return false;
+    }
 
     // check if there's an invalid character in the string (not a number, period, comma, or space)
     for (i = 0; i < inputStrLen; i++) {
         if (matrixInput[i] < 48 || matrixInput[i] > 57) {
             if (matrixInput[i] != '.' &&
                 matrixInput[i] != ',' &&
-                matrixInput[i] != ' ') {
+                matrixInput[i] != ' ' &&
+                matrixInput[i] != '-') {
                 
-                return 2;
+                cout << "Your matrix input contains invalid characters! Please check and try again.\n\n";
+                return false;
             }
         }
     }
@@ -155,38 +209,20 @@ int validateMatrixInput(string &matrixInput) {
         matrixInput += ',';
     }
 
-    return 0;
+    return true;
 }
 
-void getMatrixFromUser(vector <vector <double>> &matrix) {
-    string matrixInput; // matrix input from the user
+void getMatrixFromUser(string &matrixInput) {
+    //cin.ignore(); // clear the input stream
+    cout << "Enter your matrix: ";
+    // get matrix input as a single string, with spaces
+    getline (cin, matrixInput, '\n');
+    cout << endl;
+}
+
+void parseMatrixInput(const string &matrixInput, vector <vector <double>> &matrix) {
     string matrixEntry; // individual entry to be converted to double
-
-    int inputError; // input error code
     
-    cin.ignore(); // clear the input stream
-    do {
-        cout << "Enter your matrix: ";
-        // get matrix input as a single string, with spaces
-        getline (cin, matrixInput, '\n');
-        cout << endl;
-
-        inputError = validateMatrixInput(matrixInput);
-        
-        // print error according to error code
-        switch (inputError) {
-            case 1:
-                cout << "You didn't give a matrix! Please try again.\n\n";
-                break;
-            case 2:
-                cout << "Your matrix input contains invalid characters! Please check and try again.\n\n";
-                break;
-            case 3:
-                cout << "Input matrix must have at least one numerical entry! Please try again.\n\n";
-                break;
-        }
-    } while (inputError != 0);
-
     // calculate input string length to prevent redundant calculations
     int inputStrLen = matrixInput.length();
     // row of entries to be pushed to the matrix vector
@@ -221,5 +257,23 @@ void getMatrixFromUser(vector <vector <double>> &matrix) {
             
             i = j + 1;
         }
+    }
+}
+
+void executeOperation(const string &option, const vector <vector <double>> &matrixA, const vector <vector <double>> &matrixB) {
+    if (option == "-d") {
+        printMatrix(matrixA);
+        
+        if (matrixIsSquare(matrixA)) {
+            cout << "Determinant: " << determinant(matrixA, matrixA.size() ) << "\n\n";
+        }
+        else {
+            cout << "Matrix is not square! Determinant cannot be calculated.\n\n";
+        }
+    }
+    else if (option == "-rref") {
+        printMatrix(matrixA);
+        cout << "RREF:\n\n";
+        printMatrix( rref(matrixA) );
     }
 }

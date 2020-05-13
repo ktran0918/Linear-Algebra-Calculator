@@ -9,7 +9,6 @@ Jump to [Version Updates](#version-updates)
 The **Linear Algebra Calculator** is a command-line utility that performs various matrix operations, such as addition, subtraction, determinant, row reduction, eigenvalue/eigenvector, etc.
 
 ## Usage
-
 The program will take matrix input in the following format:
 1. Elements are entered by row, each separated by a space.
 2. Each row is separated by a comma.
